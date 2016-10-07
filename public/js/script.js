@@ -25,4 +25,10 @@ $(document).ready(function() {
     $.get('/issues', function (html) {
         $('#open-issues').html(html);
     });
+
+    setInterval(function () {
+        $.get('/issues', function(html) {
+            $('#open-issues').html(html);
+        });
+    }, 10000);
 });
