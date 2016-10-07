@@ -111,6 +111,7 @@ function getIssues(){
         }
 
         totalIssues = res.total_count;
+        octoberOpenIssues = [];
 
         _.each(res.items, function(issue) {
             var issueUrl = issue.html_url;
@@ -176,20 +177,30 @@ app.get('/', function(req, res) {
 });
 
 app.get('/issues', function (req, res) {
-    getIssues().then(function () {
-        if (req.xhr) {
-            res.render('partials/issues', {issues: octoberOpenIssues, total: totalIssues});
-        } else {
-            res.render('partials/error');
-        }
+    var total = cache.get('total-issues');
+    var openIssues = cache.get('open-issues');
 
-        octoberOpenIssues = [];
-    }).catch(function () {
+    if (req.xhr) {
+        res.render('partials/issues', {issues: openIssues, total: total});
+    } else {
         res.render('partials/error');
-        octoberOpenIssues = [];
-    });
+    }
 });
 
 app.listen(app.get('port'), function() {
     console.log('Node app is running on port', app.get('port'));
+
+    updateIssueCache();
+    setInterval(function () {
+        updateIssueCache();
+    }, 10000);
 });
+
+function updateIssueCache() {
+    getIssues().then(function () {
+        cache.put('open-issues', octoberOpenIssues, 10000);
+        cache.put('total-issues', totalIssues, 10000)
+    });
+}
+
+
